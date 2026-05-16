@@ -1,5 +1,7 @@
 # Agent Skills
 
+[中文](README.zh-CN.md) | English
+
 This repository is a personal, multi-platform skill collection. It keeps the source of truth in `skills/`, then packages those skills for Claude Code and Codex plugin distribution.
 
 ## Install

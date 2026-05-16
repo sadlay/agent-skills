@@ -1,0 +1,33 @@
+{
+  "name": "codex-sadlay-skills",
+  "version": "0.1.0",
+  "description": "Personal reusable Agent Skills for Codex",
+  "author": {
+    "name": "sadlay"
+  },
+  "homepage": "https://github.com/sadlay/agent-skills",
+  "repository": "https://github.com/sadlay/agent-skills",
+  "license": "UNLICENSED",
+  "keywords": [
+    "agent-skills",
+    "codex",
+    "authoring"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Sadlay Skills",
+    "shortDescription": "Personal reusable skills for Codex",
+    "longDescription": "A personal collection of reusable Agent Skills for authoring, automation, development, and internal workflows.",
+    "developerName": "sadlay",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Help me create a new reusable skill"
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

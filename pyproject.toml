@@ -1,0 +1,9 @@
+[project]
+name = "sadlay-agent-skills"
+version = "0.1.0"
+description = "Personal multi-platform Agent Skills collection"
+requires-python = ">=3.10"
+
+[tool.agent-skills]
+source = "skills"
+registry = "registry/skills.yaml"

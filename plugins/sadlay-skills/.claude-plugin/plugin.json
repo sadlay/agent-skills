@@ -1,0 +1,12 @@
+{
+  "name": "sadlay-skills",
+  "version": "0.1.0",
+  "description": "Personal reusable Agent Skills for authoring, automation, development, and internal workflows",
+  "author": {
+    "name": "sadlay"
+  },
+  "homepage": "https://github.com/sadlay/agent-skills",
+  "repository": "https://github.com/sadlay/agent-skills",
+  "license": "UNLICENSED",
+  "skills": "./skills/"
+}

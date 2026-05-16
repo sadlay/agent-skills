@@ -1,0 +1,17 @@
+{
+  "name": "sadlay-skills-marketplace",
+  "owner": {
+    "name": "sadlay"
+  },
+  "metadata": {
+    "description": "Sadlay's personal Agent Skills marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "sadlay-skills",
+      "description": "Personal reusable Agent Skills for authoring, automation, development, and internal workflows",
+      "source": "./plugins/sadlay-skills"
+    }
+  ]
+}

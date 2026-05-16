@@ -1,0 +1,7 @@
+This repository is designed around the Agent Skills model.
+
+Upstream references:
+- Agent Skills specification: https://agentskills.io/specification
+- Agent Skills reference repository: https://github.com/agentskills/agentskills
+
+If upstream content is copied into this repository, preserve its original license and attribution. At the time this scaffold was created, the upstream repository describes code under Apache-2.0 and documentation under CC-BY-4.0.

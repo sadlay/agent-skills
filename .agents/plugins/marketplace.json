@@ -1,0 +1,20 @@
+{
+  "name": "sadlay-skills-marketplace",
+  "interface": {
+    "displayName": "Sadlay Skills"
+  },
+  "plugins": [
+    {
+      "name": "codex-sadlay-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex-sadlay-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+skills:
+  - name: skill-author
+    path: skills/skill-author
+    status: active
+    category: authoring
+    platforms:
+      - claude
+      - codex
+    owner: sadlay
+    description: Create, review, and improve skills using this repository's authoring standards.

@@ -27,19 +27,19 @@ For local development, add the checked-out repository instead:
 
 ### Codex
 
-This repository includes a Codex plugin package at:
+Codex does not need the `python3` commands below for normal use. Add the local plugin package or local marketplace path in the Codex app/plugin UI:
 
 ```text
 plugins/codex-sadlay-skills
 ```
 
-And a local Codex marketplace descriptor at:
+Or:
 
 ```text
 .agents/plugins/marketplace.json
 ```
 
-Use the Codex app/plugin UI to add the local marketplace or plugin path above. After changing skills locally, run:
+The `python3` commands are only for repository maintainers. Run them after changing files under `skills/` so generated plugin packages stay in sync:
 
 ```bash
 python3 scripts/sync-plugin-skills

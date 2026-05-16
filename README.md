@@ -2,6 +2,54 @@
 
 This repository is a personal, multi-platform skill collection. It keeps the source of truth in `skills/`, then packages those skills for Claude Code and Codex plugin distribution.
 
+## Install
+
+### Claude Code
+
+Add this repository as a plugin marketplace:
+
+```text
+/plugin marketplace add sadlay/agent-skills
+```
+
+Then install the plugin:
+
+```text
+/plugin install sadlay-skills@sadlay-skills-marketplace
+```
+
+For local development, add the checked-out repository instead:
+
+```text
+/plugin marketplace add /Users/sadlay/WorkSpace/github/agent-skills
+/plugin install sadlay-skills@sadlay-skills-marketplace
+```
+
+### Codex
+
+This repository includes a Codex plugin package at:
+
+```text
+plugins/codex-sadlay-skills
+```
+
+And a local Codex marketplace descriptor at:
+
+```text
+.agents/plugins/marketplace.json
+```
+
+Use the Codex app/plugin UI to add the local marketplace or plugin path above. After changing skills locally, run:
+
+```bash
+python3 scripts/sync-plugin-skills
+python3 scripts/validate-skills
+```
+
+### Manual Copy
+
+If a platform only supports direct skill folders, copy individual directories from `skills/` into that platform's skill directory.
+
 ## Repository Layout
 
 - `skills/` - production-ready skills. Each child directory is a standalone skill with `SKILL.md`.

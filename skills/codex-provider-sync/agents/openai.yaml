@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Provider Sync"
+  short_description: "Restore Codex history after provider switches"
+  default_prompt: "Use $codex-provider-sync to restore Codex session visibility after I switch providers."

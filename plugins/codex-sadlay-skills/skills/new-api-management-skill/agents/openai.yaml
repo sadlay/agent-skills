@@ -1,0 +1,7 @@
+interface:
+  display_name: "New API Management"
+  short_description: "Manage New API via REST APIs"
+  default_prompt: "Use $new-api-management-skill to audit my New API instance and summarize models, users, statistics, channels, pricing, and health."
+
+policy:
+  allow_implicit_invocation: true

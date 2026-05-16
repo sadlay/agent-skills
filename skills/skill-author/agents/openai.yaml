@@ -1,3 +1,4 @@
-display_name: Skill Author
-short_description: Create and improve reusable Agent Skills.
-default_prompt: Help me turn this workflow into a reusable skill.
+interface:
+  display_name: "Skill Author"
+  short_description: "Create and improve reusable Agent Skills."
+  default_prompt: "Help me turn this workflow into a reusable skill."

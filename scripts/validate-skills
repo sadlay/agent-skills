@@ -81,9 +81,12 @@ def validate_skill(skill_dir: Path, registry: set[str]) -> list[str]:
     openai_yaml = skill_dir / "agents" / "openai.yaml"
     if openai_yaml.exists():
         text = openai_yaml.read_text(encoding="utf-8")
+        has_interface = "interface:" in text
         for required in ("display_name:", "short_description:", "default_prompt:"):
             if required not in text:
                 errors.append(f"{openai_yaml}: missing {required}")
+        if not has_interface:
+            errors.append(f"{openai_yaml}: missing interface section")
 
     return errors
 

@@ -6,9 +6,9 @@ Use this prompt to create or refresh `agents/openai.yaml` for a skill.
 Generate `agents/openai.yaml` for the skill at `<skill-path>`.
 
 Read `SKILL.md`, then produce concise UI metadata:
-- `display_name`: human-readable name, title case.
-- `short_description`: one sentence under 120 characters.
-- `default_prompt`: one realistic prompt that would trigger this skill.
+- `interface.display_name`: human-readable name, title case.
+- `interface.short_description`: one sentence under 120 characters.
+- `interface.default_prompt`: one realistic prompt that would trigger this skill.
 
 Rules:
 1. Do not invent capabilities not present in `SKILL.md`.

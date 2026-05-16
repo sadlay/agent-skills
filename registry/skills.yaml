@@ -8,3 +8,21 @@ skills:
       - codex
     owner: sadlay
     description: Create, review, and improve skills using this repository's authoring standards.
+  - name: codex-provider-sync
+    path: skills/codex-provider-sync
+    status: active
+    category: codex
+    platforms:
+      - claude
+      - codex
+    owner: sadlay
+    description: Restore Codex session visibility metadata after provider switches.
+  - name: new-api-management-skill
+    path: skills/new-api-management-skill
+    status: active
+    category: operations
+    platforms:
+      - claude
+      - codex
+    owner: sadlay
+    description: Manage live New API instances through management REST APIs.

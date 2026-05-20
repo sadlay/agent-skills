@@ -1,0 +1,37 @@
+datasources:
+  - name: local-postgres
+    type: postgresql
+    description: Local PostgreSQL example
+    host: ${LOCAL_POSTGRES_HOST:localhost}
+    port: ${LOCAL_POSTGRES_PORT:5432}
+    database: ${LOCAL_POSTGRES_DATABASE:postgres}
+    username: ${LOCAL_POSTGRES_USER:postgres}
+    password: ${LOCAL_POSTGRES_PASSWORD:}
+    sslmode: ${LOCAL_POSTGRES_SSLMODE:prefer}
+
+  - name: local-mysql
+    type: mysql
+    description: Local MySQL example
+    host: ${LOCAL_MYSQL_HOST:localhost}
+    port: ${LOCAL_MYSQL_PORT:3306}
+    database: ${LOCAL_MYSQL_DATABASE:mysql}
+    username: ${LOCAL_MYSQL_USER:root}
+    password: ${LOCAL_MYSQL_PASSWORD:}
+    charset: utf8mb4
+
+  - name: local-elasticsearch
+    type: elasticsearch
+    description: Local Elasticsearch example
+    url: ${LOCAL_ELASTICSEARCH_URL:http://localhost:9200}
+    username: ${LOCAL_ELASTICSEARCH_USER:}
+    password: ${LOCAL_ELASTICSEARCH_PASSWORD:}
+    verify_tls: ${LOCAL_ELASTICSEARCH_VERIFY_TLS:true}
+    timeout: 30
+
+  - name: local-neo4j
+    type: neo4j
+    description: Local Neo4j example
+    uri: ${LOCAL_NEO4J_URI:bolt://localhost:7687}
+    username: ${LOCAL_NEO4J_USER:neo4j}
+    password: ${LOCAL_NEO4J_PASSWORD:}
+    database: ${LOCAL_NEO4J_DATABASE:neo4j}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Datasource"
+  short_description: "Query configured PostgreSQL, MySQL, Elasticsearch, and Neo4j sources."
+  default_prompt: "Use $agent-datasource to list my configured data sources and run a safe read-only query."
+
+policy:
+  allow_implicit_invocation: true

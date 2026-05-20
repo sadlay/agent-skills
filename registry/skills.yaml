@@ -17,6 +17,15 @@ skills:
       - codex
     owner: sadlay
     description: Restore Codex session visibility metadata after provider switches.
+  - name: agent-datasource
+    path: skills/agent-datasource
+    status: active
+    category: operations
+    platforms:
+      - claude
+      - codex
+    owner: sadlay
+    description: Query and inspect configured PostgreSQL, MySQL, Elasticsearch, and Neo4j data sources safely.
   - name: new-api-management-skill
     path: skills/new-api-management-skill
     status: active

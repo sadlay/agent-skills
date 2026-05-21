@@ -21,7 +21,7 @@ or:
 
 - `name`: Required unique datasource name. Use this with `--source`.
 - `type`: Required. Supported values: `postgresql`, `postgres`, `mysql`, `elasticsearch`, `es`, `neo4j`.
-- `description`: Optional human-readable description.
+- `description`: Optional but strongly recommended. Write this for agent routing: include business domain, major entities, environment, freshness, and typical questions.
 - `username` or `user`: Login user when required.
 - `password`: Login password when required.
 
@@ -29,6 +29,14 @@ String values support environment placeholders:
 
 - `${ENV_NAME}`: require `ENV_NAME`.
 - `${ENV_NAME:default}`: use default when `ENV_NAME` is unset.
+
+Good description example:
+
+```yaml
+description: Production MySQL for orders, payments, refunds, invoices, and settlement records. Use for customer transaction questions.
+```
+
+Avoid vague descriptions such as `production database` or `main datasource`; they make source selection harder for agents.
 
 ## PostgreSQL
 
@@ -56,6 +64,12 @@ uv run scripts/agent_datasource.py sql --source analytics-postgres --sql "select
 uv run scripts/agent_datasource.py sql --source analytics-postgres --sql "select table_schema, table_name, column_name, data_type, is_nullable from information_schema.columns where table_name = 'events' order by ordinal_position"
 ```
 
+Write preview:
+
+```bash
+uv run scripts/agent_datasource.py sql --source analytics-postgres --sql "update events set reviewed = true where id = 123" --allow-write --dry-run
+```
+
 ## MySQL
 
 ```yaml
@@ -80,6 +94,12 @@ Schema discovery:
 ```bash
 uv run scripts/agent_datasource.py sql --source metadata-mysql --sql "select table_schema, table_name from information_schema.tables where table_schema not in ('information_schema', 'mysql', 'performance_schema', 'sys') order by table_schema, table_name limit 100"
 uv run scripts/agent_datasource.py sql --source metadata-mysql --sql "select table_schema, table_name, column_name, data_type, is_nullable from information_schema.columns where table_name = 'users' order by ordinal_position"
+```
+
+Write preview:
+
+```bash
+uv run scripts/agent_datasource.py sql --source metadata-mysql --sql "update users set status = 'disabled' where id = 123" --allow-write --dry-run
 ```
 
 ## Elasticsearch
@@ -112,6 +132,12 @@ uv run scripts/agent_datasource.py es --source search-prod --method GET --path "
 uv run scripts/agent_datasource.py es --source search-prod --method GET --path "/my-index/_mapping"
 ```
 
+Write preview:
+
+```bash
+uv run scripts/agent_datasource.py es --source search-prod --method DELETE --path "/old-index" --allow-write --dry-run
+```
+
 ## Neo4j
 
 ```yaml
@@ -142,3 +168,9 @@ uv run scripts/agent_datasource.py cypher --source graph-test --cypher "SHOW CON
 ```
 
 `CALL db.schema.visualization()` is useful for a structural overview. It returns a virtual schema graph, not business nodes. Use `db.schema.nodeTypeProperties()` and `db.schema.relTypeProperties()` for property names and types.
+
+Write preview:
+
+```bash
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "MATCH (n:Temp) DELETE n" --allow-write --dry-run
+```

@@ -21,19 +21,22 @@ Resolve `scripts/`, `references/`, and `assets/` paths relative to this skill di
 python3 scripts/check_env.py
 ```
 
-3. List configured sources before querying:
+3. List configured sources before querying unless the user explicitly named a source:
 
 ```bash
 uv run scripts/agent_datasource.py list
 ```
 
-4. Choose the command by source type:
+4. Choose one or more sources by `name`, `type`, and especially `description`. Use `description` as the routing hint for business domain, covered entities, environment, freshness, and common use cases.
+   - If multiple sources may be needed, start with the source most likely to identify the primary entity, query narrowly, then use returned identifiers to query related sources.
+   - If descriptions are ambiguous or multiple sources look equally relevant, ask the user to choose before querying.
+5. Choose the command by source type:
    - PostgreSQL/MySQL: `sql`
    - Elasticsearch: `es`
    - Neo4j: `cypher`
-
-5. Before writing task-specific queries, perform narrow schema discovery unless the user already provided the relevant schema.
-6. Keep operations read-only unless the user explicitly asks for a write. Writes require `--allow-write`.
+6. Before writing task-specific queries, perform narrow schema discovery unless the user already provided the relevant schema.
+7. Keep operations read-only unless the user explicitly asks for a write. Writes require `--allow-write`.
+8. For writes, first run the intended command with `--dry-run --allow-write`, show the preview to the user, ask for confirmation, then rerun without `--dry-run` only after explicit approval.
 
 ## Commands
 
@@ -49,18 +52,21 @@ Run SQL against PostgreSQL or MySQL:
 ```bash
 uv run scripts/agent_datasource.py sql --source my-mysql --sql "select * from users limit 10"
 uv run scripts/agent_datasource.py sql --source my-postgres --sql "select * from events" --max-rows 100
+uv run scripts/agent_datasource.py sql --source my-mysql --sql "update refunds set status = 'reviewed' where id = 1" --allow-write --dry-run
 ```
 
 Run Elasticsearch DSL through REST:
 
 ```bash
 uv run scripts/agent_datasource.py es --source my-es --method POST --path /my-index/_search --body '{"query":{"match_all":{}},"size":10}'
+uv run scripts/agent_datasource.py es --source my-es --method DELETE --path /old-index --allow-write --dry-run
 ```
 
 Run Neo4j Cypher:
 
 ```bash
 uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "MATCH (n) RETURN n LIMIT 10"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "MATCH (n:Temp) DELETE n" --allow-write --dry-run
 ```
 
 Use a non-default config file:
@@ -112,6 +118,8 @@ uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "SHOW CONST
 
 Use [configuration.md](references/configuration.md) when creating or changing datasource YAML. The bundled example is at [datasources.example.yaml](assets/datasources.example.yaml).
 
+Write `description` for agent routing, not only for human documentation. Include the business domain, major entities, environment, freshness, and typical questions. Example: `Production MySQL for orders, payments, refunds, invoices, and settlement records. Use for customer transaction questions.`
+
 The config may be a list or an object with a `datasources` list. Values support environment placeholders:
 
 ```yaml
@@ -142,6 +150,7 @@ Read [dependencies.md](references/dependencies.md) when dependencies are missing
 
 - Never print passwords, tokens, or full connection strings.
 - Default to read-only. Do not pass `--allow-write` unless the user explicitly requests a write operation.
+- Before any write, run the exact intended command with `--dry-run --allow-write`, show the preview, and wait for explicit user confirmation.
 - For SQL and Cypher, inspect the query intent before executing. The runner blocks common write keywords, but the agent is still responsible for avoiding unsafe operations.
 - For Elasticsearch, prefer `POST /<index>/_search` with a DSL body for searches. Avoid destructive methods unless explicitly requested.
 - SQL and Cypher default to `--max-rows 1000`; lower it for exploratory queries. Report the source name, source type, query shape, row or hit count, and any truncation.

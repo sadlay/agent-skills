@@ -315,6 +315,41 @@ def assert_read_only_es(method: str, path: str, allow_write: bool) -> None:
     raise UserError("Elasticsearch request is not read-only; pass --allow-write only after explicit user approval")
 
 
+def read_only_status(kind: str, *, sql: str | None = None, cypher: str | None = None,
+                     method: str | None = None, path: str | None = None) -> tuple[bool, str | None]:
+    try:
+        if kind == "sql":
+            assert_read_only_sql(sql or "", False)
+        elif kind == "cypher":
+            assert_read_only_cypher(cypher or "", False)
+        elif kind == "elasticsearch":
+            assert_read_only_es(method or "GET", path or "", False)
+        else:
+            raise UserError(f"unknown operation kind: {kind}")
+    except UserError as exc:
+        return False, str(exc)
+    return True, None
+
+
+def emit_dry_run(source: dict[str, Any], operation: str, allow_write: bool, preview: dict[str, Any],
+                 read_only: bool, blocked_reason: str | None = None) -> None:
+    emit({
+        "dry_run": True,
+        "source": safe_source(source),
+        "operation": operation,
+        "safety": {
+            "allow_write": allow_write,
+            "read_only": read_only,
+            "blocked_without_allow_write": not read_only,
+            "blocked_reason": blocked_reason,
+            "requires_confirmation": allow_write,
+        },
+        "preview": preview,
+        "would_connect": True,
+        "would_execute": True,
+    })
+
+
 def checked_max_rows(max_rows: int) -> int:
     if max_rows < 1:
         raise UserError("--max-rows must be greater than zero")
@@ -406,6 +441,18 @@ def run_sql_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> 
         raise UserError(f"{source['name']} is {source['type']}, not a SQL datasource")
     assert_read_only_sql(args.sql, args.allow_write)
     source = resolve_env(source)
+    read_only, blocked_reason = read_only_status("sql", sql=args.sql)
+    if args.dry_run:
+        require_fields(source, ["host", "database", "username", "password"])
+        emit_dry_run(
+            source,
+            "sql",
+            args.allow_write,
+            {"sql": args.sql, "max_rows": checked_max_rows(args.max_rows)},
+            read_only,
+            blocked_reason,
+        )
+        return
     if source["type"] == "postgresql":
         emit(run_postgresql(source, args.sql, args.max_rows))
     else:
@@ -422,8 +469,6 @@ def parse_json_arg(value: str | None, label: str) -> Any:
 
 
 def run_es_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> None:
-    import requests
-
     source = find_source(sources, args.source)
     if source["type"] != "elasticsearch":
         raise UserError(f"{source['name']} is {source['type']}, not an Elasticsearch datasource")
@@ -431,6 +476,22 @@ def run_es_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> N
     assert_read_only_es(method, args.path, args.allow_write)
     source = resolve_env(source)
     require_fields(source, ["url"])
+    params = parse_json_arg(args.params, "--params")
+    body = parse_json_arg(args.body, "--body")
+    read_only, blocked_reason = read_only_status("elasticsearch", method=method, path=args.path)
+    if args.dry_run:
+        emit_dry_run(
+            source,
+            "elasticsearch",
+            args.allow_write,
+            {"method": method, "path": args.path, "params": params, "body": body},
+            read_only,
+            blocked_reason,
+        )
+        return
+
+    import requests
+
     url = str(source["url"]).rstrip("/") + "/" + args.path.lstrip("/")
     auth = None
     if user(source) or source.get("password"):
@@ -438,8 +499,8 @@ def run_es_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> N
     response = requests.request(
         method,
         url,
-        params=parse_json_arg(args.params, "--params"),
-        json=parse_json_arg(args.body, "--body"),
+        params=params,
+        json=body,
         auth=auth,
         verify=parse_bool(source.get("verify_tls"), default=True),
         timeout=float(source.get("timeout", 30)),
@@ -460,8 +521,6 @@ def run_es_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> N
 
 
 def run_cypher_command(args: argparse.Namespace, sources: list[dict[str, Any]]) -> None:
-    from neo4j import GraphDatabase
-
     source = find_source(sources, args.source)
     if source["type"] != "neo4j":
         raise UserError(f"{source['name']} is {source['type']}, not a Neo4j datasource")
@@ -469,6 +528,20 @@ def run_cypher_command(args: argparse.Namespace, sources: list[dict[str, Any]]) 
     max_rows = checked_max_rows(args.max_rows)
     source = resolve_env(source)
     require_fields(source, ["uri", "username", "password"])
+    read_only, blocked_reason = read_only_status("cypher", cypher=args.cypher)
+    if args.dry_run:
+        emit_dry_run(
+            source,
+            "cypher",
+            args.allow_write,
+            {"cypher": args.cypher, "max_rows": max_rows},
+            read_only,
+            blocked_reason,
+        )
+        return
+
+    from neo4j import GraphDatabase
+
     driver = GraphDatabase.driver(source["uri"], auth=(user(source), source["password"]))
     try:
         with driver.session(database=source.get("database", "neo4j")) as session:
@@ -507,6 +580,7 @@ def build_parser() -> argparse.ArgumentParser:
     sql_parser.add_argument("--sql", required=True)
     sql_parser.add_argument("--max-rows", type=int, default=1000)
     sql_parser.add_argument("--allow-write", action="store_true")
+    sql_parser.add_argument("--dry-run", action="store_true", help="Preview source, operation, and safety without connecting.")
 
     es_parser = subparsers.add_parser("es", help="Run Elasticsearch REST DSL request.")
     es_parser.add_argument("--source", required=True)
@@ -515,12 +589,14 @@ def build_parser() -> argparse.ArgumentParser:
     es_parser.add_argument("--params", help="JSON object for query parameters.")
     es_parser.add_argument("--body", help="JSON request body.")
     es_parser.add_argument("--allow-write", action="store_true")
+    es_parser.add_argument("--dry-run", action="store_true", help="Preview source, operation, and safety without connecting.")
 
     cypher_parser = subparsers.add_parser("cypher", help="Run Cypher against Neo4j.")
     cypher_parser.add_argument("--source", required=True)
     cypher_parser.add_argument("--cypher", required=True)
     cypher_parser.add_argument("--max-rows", type=int, default=1000)
     cypher_parser.add_argument("--allow-write", action="store_true")
+    cypher_parser.add_argument("--dry-run", action="store_true", help="Preview source, operation, and safety without connecting.")
     return parser
 
 

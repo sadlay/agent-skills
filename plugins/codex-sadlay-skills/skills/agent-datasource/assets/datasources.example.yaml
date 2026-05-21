@@ -1,7 +1,7 @@
 datasources:
   - name: local-postgres
     type: postgresql
-    description: Local PostgreSQL example
+    description: Local PostgreSQL for analytics events, account activity, and SQL schema discovery examples. Use for development PostgreSQL questions.
     host: ${LOCAL_POSTGRES_HOST:localhost}
     port: ${LOCAL_POSTGRES_PORT:5432}
     database: ${LOCAL_POSTGRES_DATABASE:postgres}
@@ -11,7 +11,7 @@ datasources:
 
   - name: local-mysql
     type: mysql
-    description: Local MySQL example
+    description: Local MySQL for orders, payments, refunds, invoices, and settlement records. Use for development transaction questions.
     host: ${LOCAL_MYSQL_HOST:localhost}
     port: ${LOCAL_MYSQL_PORT:3306}
     database: ${LOCAL_MYSQL_DATABASE:mysql}
@@ -21,7 +21,7 @@ datasources:
 
   - name: local-elasticsearch
     type: elasticsearch
-    description: Local Elasticsearch example
+    description: Local Elasticsearch for application logs, request traces, error investigations, and search index mapping examples.
     url: ${LOCAL_ELASTICSEARCH_URL:http://localhost:9200}
     username: ${LOCAL_ELASTICSEARCH_USER:}
     password: ${LOCAL_ELASTICSEARCH_PASSWORD:}
@@ -30,7 +30,7 @@ datasources:
 
   - name: local-neo4j
     type: neo4j
-    description: Local Neo4j example
+    description: Local Neo4j for account relationships, ownership links, organization topology, and graph schema discovery examples.
     uri: ${LOCAL_NEO4J_URI:bolt://localhost:7687}
     username: ${LOCAL_NEO4J_USER:neo4j}
     password: ${LOCAL_NEO4J_PASSWORD:}

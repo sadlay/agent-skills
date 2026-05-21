@@ -49,6 +49,13 @@ Required: `host`, `database`, `username` or `user`, `password`.
 
 Optional: `port` default `5432`, `sslmode` default `prefer`, `connect_timeout`, `options`.
 
+Schema discovery:
+
+```bash
+uv run scripts/agent_datasource.py sql --source analytics-postgres --sql "select table_schema, table_name from information_schema.tables where table_schema not in ('information_schema', 'pg_catalog') order by table_schema, table_name limit 100"
+uv run scripts/agent_datasource.py sql --source analytics-postgres --sql "select table_schema, table_name, column_name, data_type, is_nullable from information_schema.columns where table_name = 'events' order by ordinal_position"
+```
+
 ## MySQL
 
 ```yaml
@@ -67,6 +74,13 @@ Optional: `port` default `5432`, `sslmode` default `prefer`, `connect_timeout`, 
 Required: `host`, `database`, `username` or `user`, `password`.
 
 Optional: `port` default `3306`, `charset` default `utf8mb4`, `connect_timeout`, `ssl`.
+
+Schema discovery:
+
+```bash
+uv run scripts/agent_datasource.py sql --source metadata-mysql --sql "select table_schema, table_name from information_schema.tables where table_schema not in ('information_schema', 'mysql', 'performance_schema', 'sys') order by table_schema, table_name limit 100"
+uv run scripts/agent_datasource.py sql --source metadata-mysql --sql "select table_schema, table_name, column_name, data_type, is_nullable from information_schema.columns where table_name = 'users' order by ordinal_position"
+```
 
 ## Elasticsearch
 
@@ -91,6 +105,13 @@ Use REST DSL for searches:
 uv run scripts/agent_datasource.py es --source search-prod --method POST --path /my-index/_search --body '{"query":{"match_all":{}},"size":10}'
 ```
 
+Schema discovery:
+
+```bash
+uv run scripts/agent_datasource.py es --source search-prod --method GET --path "/_cat/indices?format=json"
+uv run scripts/agent_datasource.py es --source search-prod --method GET --path "/my-index/_mapping"
+```
+
 ## Neo4j
 
 ```yaml
@@ -106,3 +127,18 @@ uv run scripts/agent_datasource.py es --source search-prod --method POST --path 
 Required: `uri`, `username` or `user`, `password`.
 
 Optional: `database` default `neo4j`.
+
+Schema discovery:
+
+```bash
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.schema.visualization()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.schema.nodeTypeProperties()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.schema.relTypeProperties()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.labels()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.relationshipTypes()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "CALL db.propertyKeys()"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "SHOW INDEXES"
+uv run scripts/agent_datasource.py cypher --source graph-test --cypher "SHOW CONSTRAINTS"
+```
+
+`CALL db.schema.visualization()` is useful for a structural overview. It returns a virtual schema graph, not business nodes. Use `db.schema.nodeTypeProperties()` and `db.schema.relTypeProperties()` for property names and types.

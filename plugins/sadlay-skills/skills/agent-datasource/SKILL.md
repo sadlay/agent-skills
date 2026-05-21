@@ -32,7 +32,8 @@ uv run scripts/agent_datasource.py list
    - Elasticsearch: `es`
    - Neo4j: `cypher`
 
-5. Keep operations read-only unless the user explicitly asks for a write. Writes require `--allow-write`.
+5. Before writing task-specific queries, perform narrow schema discovery unless the user already provided the relevant schema.
+6. Keep operations read-only unless the user explicitly asks for a write. Writes require `--allow-write`.
 
 ## Commands
 
@@ -68,6 +69,44 @@ Use a non-default config file:
 AGENT_DATASOURCE_CONFIG=/path/to/datasources.yaml uv run scripts/agent_datasource.py list
 uv run scripts/agent_datasource.py --config /path/to/datasources.yaml list
 ```
+
+## Schema Discovery
+
+Use read-only metadata queries to understand the datasource before writing task-specific queries. Keep discovery narrow: list candidate structures first, then inspect only the tables, indexes, labels, or relationship types that matter.
+
+PostgreSQL/MySQL table discovery:
+
+```bash
+uv run scripts/agent_datasource.py sql --source my-mysql --sql "select table_schema, table_name from information_schema.tables where table_schema not in ('information_schema', 'pg_catalog', 'mysql', 'performance_schema', 'sys') order by table_schema, table_name limit 100"
+```
+
+PostgreSQL/MySQL column discovery:
+
+```bash
+uv run scripts/agent_datasource.py sql --source my-mysql --sql "select table_schema, table_name, column_name, data_type, is_nullable from information_schema.columns where table_name = 'users' order by ordinal_position"
+```
+
+Elasticsearch index and mapping discovery:
+
+```bash
+uv run scripts/agent_datasource.py es --source my-es --method GET --path "/_cat/indices?format=json"
+uv run scripts/agent_datasource.py es --source my-es --method GET --path "/my-index/_mapping"
+```
+
+Neo4j schema discovery:
+
+```bash
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.schema.visualization()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.schema.nodeTypeProperties()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.schema.relTypeProperties()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.labels()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.relationshipTypes()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "CALL db.propertyKeys()"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "SHOW INDEXES"
+uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "SHOW CONSTRAINTS"
+```
+
+`CALL db.schema.visualization()` returns a virtual schema graph for overview. Use `db.schema.nodeTypeProperties()` and `db.schema.relTypeProperties()` when property names and types matter.
 
 ## Configuration
 

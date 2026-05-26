@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import shutil
+import sys
+import zipfile
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SKILLS_DIR = ROOT / "skills"
+DEFAULT_OUTPUT_DIR = ROOT / "dist" / "skill-zips"
+IGNORED_NAMES = {".DS_Store"}
+IGNORED_PARTS = {"__pycache__", ".venv", "node_modules"}
+IGNORED_SUFFIXES = {".pyc", ".pyo"}
+
+
+def skill_dirs(names: list[str]) -> list[Path]:
+    if names:
+        dirs = [SKILLS_DIR / name for name in names]
+    else:
+        dirs = sorted(path for path in SKILLS_DIR.iterdir() if (path / "SKILL.md").exists())
+
+    missing = [path.name for path in dirs if not (path / "SKILL.md").exists()]
+    if missing:
+        raise SystemExit(f"skill not found or missing SKILL.md: {', '.join(missing)}")
+    return dirs
+
+
+def should_include(path: Path) -> bool:
+    if path.name in IGNORED_NAMES:
+        return False
+    if path.suffix in IGNORED_SUFFIXES:
+        return False
+    return not any(part in IGNORED_PARTS for part in path.parts)
+
+
+def write_zip(skill_dir: Path, output_dir: Path, *, include_folder: bool) -> Path:
+    zip_path = output_dir / f"{skill_dir.name}.zip"
+    prefix = Path(skill_dir.name) if include_folder else Path()
+    if zip_path.exists():
+        zip_path.unlink()
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(skill_dir.rglob("*")):
+            if path.is_dir() or not should_include(path):
+                continue
+            relative = path.relative_to(skill_dir)
+            archive.write(path, (prefix / relative).as_posix())
+    return zip_path
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Package skills as uploadable zip files.")
+    parser.add_argument("skills", nargs="*", help="Optional skill names. Defaults to every skill under skills/.")
+    parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Directory for generated zip files.")
+    parser.add_argument("--clean", action="store_true", help="Remove the output directory before packaging.")
+    parser.add_argument(
+        "--include-folder",
+        action="store_true",
+        help="Place files under a top-level skill-name/ folder inside each zip.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if not SKILLS_DIR.exists():
+        print("skills/ directory does not exist", file=sys.stderr)
+        return 1
+
+    output_dir = Path(args.output_dir).expanduser()
+    if not output_dir.is_absolute():
+        output_dir = ROOT / output_dir
+    if args.clean and output_dir.exists():
+        shutil.rmtree(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    packaged = [
+        write_zip(skill_dir, output_dir, include_folder=args.include_folder)
+        for skill_dir in skill_dirs(args.skills)
+    ]
+    for zip_path in packaged:
+        print(zip_path.relative_to(ROOT) if zip_path.is_relative_to(ROOT) else zip_path)
+    print(f"Packaged {len(packaged)} skill(s) into {output_dir}.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

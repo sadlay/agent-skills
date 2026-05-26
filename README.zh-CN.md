@@ -46,11 +46,12 @@ plugins/codex-sadlay-skills
 ```bash
 python3 scripts/sync-plugin-skills
 python3 scripts/validate-skills
+python3 scripts/package-skill-zips --clean
 ```
 
 ### 手动复制
 
-如果某个平台只支持直接加载 skill 文件夹，可以把 `skills/` 下的单个目录复制到该平台的 skill 目录。
+如果某个平台只支持直接加载 skill 文件夹，可以把 `skills/` 下的单个目录复制到该平台的 skill 目录。如果某个平台需要上传 zip，运行 `python3 scripts/package-skill-zips --clean`；生成的包会输出到 `dist/skill-zips/`，该目录已被 git 忽略。
 
 ## 仓库结构
 

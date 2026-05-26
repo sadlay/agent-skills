@@ -46,11 +46,12 @@ The `python3` commands are only for repository maintainers. Run them after chang
 ```bash
 python3 scripts/sync-plugin-skills
 python3 scripts/validate-skills
+python3 scripts/package-skill-zips --clean
 ```
 
 ### Manual Copy
 
-If a platform only supports direct skill folders, copy individual directories from `skills/` into that platform's skill directory.
+If a platform only supports direct skill folders, copy individual directories from `skills/` into that platform's skill directory. If a platform requires zip upload, run `python3 scripts/package-skill-zips --clean`; generated packages are written to `dist/skill-zips/`, which is ignored by git.
 
 ## Repository Layout
 

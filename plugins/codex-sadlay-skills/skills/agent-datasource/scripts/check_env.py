@@ -25,7 +25,7 @@ def config_candidates() -> list[Path]:
     if configured:
         return [Path(configured).expanduser()]
     root = Path.home() / ".config" / "agent-datasource"
-    return [root / "datasources.yaml", root / "datasources.yml"]
+    return [root / "config.yaml", root / "config.yml"]
 
 
 def main() -> int:

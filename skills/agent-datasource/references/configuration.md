@@ -1,6 +1,20 @@
 # Datasource Configuration
 
-The default config location is `~/.config/agent-datasource/datasources.yaml`. `datasources.yml` is accepted as a fallback. `AGENT_DATASOURCE_CONFIG` may point to any exact config file path.
+The default config location is `~/.config/agent-datasource/config.yaml`. `config.yml` is accepted as a fallback. `AGENT_DATASOURCE_CONFIG` may point to any exact config file path.
+
+If no real config exists, ask the user before creating a template:
+
+```bash
+uv run scripts/agent_datasource.py init-config
+```
+
+This creates `~/.config/agent-datasource/config.example.yaml` and does not create or overwrite `config.yaml`. The user should edit the example, then copy or rename it to `config.yaml` when ready.
+
+Use `--force` only to overwrite the example template:
+
+```bash
+uv run scripts/agent_datasource.py init-config --force
+```
 
 The root may be either:
 

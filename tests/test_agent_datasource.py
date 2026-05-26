@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import tempfile
 import sys
 import types
@@ -37,7 +38,7 @@ class AgentDatasourceTest(unittest.TestCase):
     def setUp(self) -> None:
         self.runner = load_runner()
         self.tempdir = tempfile.TemporaryDirectory()
-        self.config = Path(self.tempdir.name) / "datasources.yaml"
+        self.config = Path(self.tempdir.name) / "config.yaml"
         self.config.write_text(
             json.dumps(
                 {
@@ -88,6 +89,56 @@ class AgentDatasourceTest(unittest.TestCase):
                 print(f"error: {exc}", file=stderr)
                 code = 2
         return code, stdout.getvalue(), stderr.getvalue()
+
+    def test_default_config_candidates_use_config_names_only(self) -> None:
+        original = os.environ.pop("AGENT_DATASOURCE_CONFIG", None)
+        try:
+            candidates = self.runner.config_candidates(None)
+        finally:
+            if original is not None:
+                os.environ["AGENT_DATASOURCE_CONFIG"] = original
+
+        self.assertEqual([candidate.name for candidate in candidates], ["config.yaml", "config.yml"])
+
+    def test_init_config_creates_example_template_only(self) -> None:
+        config_dir = Path(self.tempdir.name) / "config"
+        target = config_dir / "config.example.yaml"
+        real_config = config_dir / "config.yaml"
+        code, stdout, stderr = self.run_main("init-config", "--target-dir", str(config_dir))
+
+        self.assertEqual(code, 0, stderr)
+        payload = json.loads(stdout)
+        self.assertTrue(payload["created"])
+        self.assertEqual(payload["path"], str(target))
+        self.assertTrue(target.exists())
+        self.assertFalse(real_config.exists())
+        self.assertIn("datasources:", target.read_text(encoding="utf-8"))
+
+    def test_init_config_refuses_to_overwrite_existing_template_without_force(self) -> None:
+        config_dir = Path(self.tempdir.name) / "config"
+        config_dir.mkdir()
+        target = config_dir / "config.example.yaml"
+        target.write_text("custom: true\n", encoding="utf-8")
+
+        code, _stdout, stderr = self.run_main("init-config", "--target-dir", str(config_dir))
+
+        self.assertEqual(code, 2)
+        self.assertIn("already exists", stderr)
+        self.assertEqual(target.read_text(encoding="utf-8"), "custom: true\n")
+
+    def test_init_config_force_overwrites_existing_template(self) -> None:
+        config_dir = Path(self.tempdir.name) / "config"
+        config_dir.mkdir()
+        target = config_dir / "config.example.yaml"
+        target.write_text("custom: true\n", encoding="utf-8")
+
+        code, stdout, stderr = self.run_main("init-config", "--target-dir", str(config_dir), "--force")
+
+        self.assertEqual(code, 0, stderr)
+        payload = json.loads(stdout)
+        self.assertTrue(payload["created"])
+        self.assertTrue(payload["overwritten"])
+        self.assertIn("datasources:", target.read_text(encoding="utf-8"))
 
     def test_list_masks_secrets_and_preserves_descriptions(self) -> None:
         code, stdout, stderr = self.run_main("list")

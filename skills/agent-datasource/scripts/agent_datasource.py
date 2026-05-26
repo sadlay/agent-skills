@@ -19,6 +19,7 @@ import decimal
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,9 @@ ES_READ_POST_SUFFIXES = {
 }
 
 ENV_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::([^}]*))?\}")
+SKILL_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_CONFIG_DIR = Path.home() / ".config" / "agent-datasource"
+EXAMPLE_CONFIG_NAME = "config.example.yaml"
 
 
 class UserError(Exception):
@@ -117,8 +121,30 @@ def config_candidates(path: str | None) -> list[Path]:
     env_path = os.environ.get("AGENT_DATASOURCE_CONFIG")
     if env_path:
         return [Path(env_path).expanduser()]
-    root = Path.home() / ".config" / "agent-datasource"
-    return [root / "datasources.yaml", root / "datasources.yml"]
+    return [DEFAULT_CONFIG_DIR / "config.yaml", DEFAULT_CONFIG_DIR / "config.yml"]
+
+
+def init_config(target_dir: str | None, force: bool) -> dict[str, Any]:
+    config_dir = Path(target_dir).expanduser() if target_dir else DEFAULT_CONFIG_DIR
+    source = SKILL_DIR / "assets" / EXAMPLE_CONFIG_NAME
+    target = config_dir / EXAMPLE_CONFIG_NAME
+    if not source.exists():
+        raise UserError(f"bundled example config not found: {source}")
+    if target.exists() and not force:
+        raise UserError(f"example config already exists: {target}; pass --force to overwrite")
+    config_dir.mkdir(parents=True, exist_ok=True)
+    overwritten = target.exists()
+    shutil.copyfile(source, target)
+    return {
+        "created": True,
+        "overwritten": overwritten,
+        "path": str(target),
+        "next_steps": [
+            "Edit the example file for your real datasources.",
+            "Copy or rename it to config.yaml when ready.",
+            "Do not put plaintext secrets in the file; prefer environment placeholders.",
+        ],
+    }
 
 
 def load_config(path: str | None) -> tuple[Path, list[dict[str, Any]]]:
@@ -575,6 +601,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("check-env", help="Show resolved config path and datasource count.")
 
+    init_parser = subparsers.add_parser("init-config", help="Create config.example.yaml template without touching real config.")
+    init_parser.add_argument("--target-dir", help="Directory for config.example.yaml. Defaults to ~/.config/agent-datasource.")
+    init_parser.add_argument("--force", action="store_true", help="Overwrite an existing config.example.yaml template.")
+
     sql_parser = subparsers.add_parser("sql", help="Run SQL against PostgreSQL or MySQL.")
     sql_parser.add_argument("--source", required=True)
     sql_parser.add_argument("--sql", required=True)
@@ -603,6 +633,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command == "init-config":
+        emit(init_config(args.target_dir, args.force))
+        return 0
     config_path, sources = load_config(args.config)
 
     if args.command == "list":

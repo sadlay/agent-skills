@@ -13,8 +13,9 @@ Resolve `scripts/`, `references/`, and `assets/` paths relative to this skill di
 
 1. Locate the datasource config:
    - Use `AGENT_DATASOURCE_CONFIG` when set.
-   - Otherwise use `~/.config/agent-datasource/datasources.yaml`.
-   - If missing, also check `~/.config/agent-datasource/datasources.yml`.
+   - Otherwise use `~/.config/agent-datasource/config.yaml`.
+   - If missing, also check `~/.config/agent-datasource/config.yml`.
+   - If no config exists, tell the user what paths were checked and ask whether to create `~/.config/agent-datasource/config.example.yaml` from the bundled template. Do not create a real `config.yaml` automatically.
 2. If the environment is uncertain, run:
 
 ```bash
@@ -47,6 +48,14 @@ uv run scripts/agent_datasource.py list
 uv run scripts/agent_datasource.py list --type mysql
 ```
 
+Create an example config template after user confirmation:
+
+```bash
+uv run scripts/agent_datasource.py init-config
+uv run scripts/agent_datasource.py init-config --force
+uv run scripts/agent_datasource.py init-config --target-dir /path/to/config-dir
+```
+
 Run SQL against PostgreSQL or MySQL:
 
 ```bash
@@ -72,8 +81,8 @@ uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "MATCH (n:T
 Use a non-default config file:
 
 ```bash
-AGENT_DATASOURCE_CONFIG=/path/to/datasources.yaml uv run scripts/agent_datasource.py list
-uv run scripts/agent_datasource.py --config /path/to/datasources.yaml list
+AGENT_DATASOURCE_CONFIG=/path/to/config.yaml uv run scripts/agent_datasource.py list
+uv run scripts/agent_datasource.py --config /path/to/config.yaml list
 ```
 
 ## Schema Discovery
@@ -116,9 +125,11 @@ uv run scripts/agent_datasource.py cypher --source my-neo4j --cypher "SHOW CONST
 
 ## Configuration
 
-Use [configuration.md](references/configuration.md) when creating or changing datasource YAML. The bundled example is at [datasources.example.yaml](assets/datasources.example.yaml).
+Use [configuration.md](references/configuration.md) when creating or changing datasource YAML. The bundled example is at [config.example.yaml](assets/config.example.yaml).
 
 Write `description` for agent routing, not only for human documentation. Include the business domain, major entities, environment, freshness, and typical questions. Example: `Production MySQL for orders, payments, refunds, invoices, and settlement records. Use for customer transaction questions.`
+
+If the real config is missing, use `init-config` only after user confirmation. It writes `config.example.yaml`; the user must edit it and copy or rename it to `config.yaml` before querying.
 
 The config may be a list or an object with a `datasources` list. Values support environment placeholders:
 
@@ -149,6 +160,7 @@ Read [dependencies.md](references/dependencies.md) when dependencies are missing
 ## Safety Rules
 
 - Never print passwords, tokens, or full connection strings.
+- Do not auto-create `config.yaml`. Only create `config.example.yaml` after user confirmation.
 - Default to read-only. Do not pass `--allow-write` unless the user explicitly requests a write operation.
 - Before any write, run the exact intended command with `--dry-run --allow-write`, show the preview, and wait for explicit user confirmation.
 - For SQL and Cypher, inspect the query intent before executing. The runner blocks common write keywords, but the agent is still responsible for avoiding unsafe operations.

@@ -8,6 +8,14 @@ uv run scripts/agent_datasource.py check-env
 
 The script declares inline dependencies, so `uv` resolves them automatically in an isolated environment.
 
+For environments that need preinstalled dependencies, use the bundled `requirements.txt` with `uv`:
+
+```bash
+uv pip install -r requirements.txt
+```
+
+Use `uv pip sync requirements.txt` only when the environment should exactly match this skill's dependency list, because sync may remove packages not listed in the file.
+
 ## Required Python Packages
 
 - PostgreSQL: `psycopg[binary]>=3.2,<4`
@@ -21,17 +29,17 @@ The script declares inline dependencies, so `uv` resolves them automatically in 
 Run this from the skill directory:
 
 ```bash
-python3 scripts/check_env.py
+uv run scripts/check_env.py
 ```
 
 This diagnostic is standard-library only. It checks Python version, `uv` availability, config path, and whether drivers are importable in the current Python environment.
 
-## Manual Installation
+## Requirements File
 
-Use manual installation only when `uv` is unavailable or a fixed Python environment is required:
+The root of this skill includes `requirements.txt` for CI, plugin packaging, and environments that install dependencies before running commands:
 
 ```bash
-python3 -m pip install "psycopg[binary]>=3.2,<4" "PyMySQL>=1.1,<2" "requests>=2.32,<3" "neo4j>=5,<7" "PyYAML>=6,<7"
+uv pip install -r requirements.txt
 ```
 
 Drivers are generally compatible across common server versions:

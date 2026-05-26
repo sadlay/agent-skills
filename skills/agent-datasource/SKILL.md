@@ -19,7 +19,7 @@ Resolve `scripts/`, `references/`, and `assets/` paths relative to this skill di
 2. If the environment is uncertain, run:
 
 ```bash
-python3 scripts/check_env.py
+uv run scripts/check_env.py
 ```
 
 3. List configured sources before querying unless the user explicitly named a source:
@@ -147,7 +147,7 @@ datasources:
 
 ## Dependencies
 
-The runner uses `uv run` with inline Python dependencies:
+The runner uses `uv run` with inline Python dependencies and also ships a `requirements.txt` for preinstalled environments:
 
 - `psycopg[binary]` for PostgreSQL
 - `PyMySQL` for MySQL
@@ -155,7 +155,7 @@ The runner uses `uv run` with inline Python dependencies:
 - `neo4j` for Neo4j
 - `PyYAML` for config loading
 
-Read [dependencies.md](references/dependencies.md) when dependencies are missing, `uv` is unavailable, or a machine needs manual installation guidance.
+Read [dependencies.md](references/dependencies.md) when dependencies are missing or a machine needs preinstalled dependency guidance. Prefer `uv pip install -r requirements.txt` for manual setup.
 
 ## Safety Rules
 
